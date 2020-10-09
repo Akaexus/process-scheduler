@@ -2,6 +2,14 @@
 # -*- coding: utf-8 -*-
 import random
 
+def custom_input(text):
+    n = input(text)
+    if n.isnumeric() and 0 <= int(n):
+        return int(n)
+    else:
+        return custom_input(text)
+
+
 colors = [
     '\033[95m', # header
     '\033[94m', # okblue
@@ -58,15 +66,15 @@ class Processor:
 
 
 
-number_of_processors = int(input("Liczba procesorów: "))
+number_of_processors = custom_input("Liczba procesorów: ")
 processors = []
 for i in range(number_of_processors):
     processors.append(Processor(f'cpu{i}'))
 
-number_of_tasks = int(input("Liczba zadań: "))
+number_of_tasks = custom_input("Liczba zadań: ")
 tasks = []
 for i in range(number_of_tasks):
-    length = int(input(f'Długość zadania {i}: '))
+    length = custom_input(f'Długość zadania {i}: ')
     tasks.append(Task(i, length))
 
 tasks = sorted(tasks,key=lambda t: t.length)
