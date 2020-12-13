@@ -1,0 +1,4 @@
+iterations: 20000
+mutation_chance: 0.1
+population_size: 50
+crossover_cutoff: 0.5 # odcięcie przy krzyżowaniu
