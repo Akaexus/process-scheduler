@@ -1,4 +1,6 @@
 iterations: 10000
-mutation_chance: 0.5
+mutation_chance: 0.5 # szansa na mutacje
+mutation_rounds: 10 # liczba losowych tasków do zamiany podczas mutacji
+part_of_pop_to_mutate: 0.1 # odsetek populacji do zmutowania (osobniki ze środka klasyfikacji są mutowane)
 population_size: 25
 crossover_cutoff: 0.5 # odcięcie przy krzyżowaniu

@@ -2,7 +2,11 @@ import random
 import yaml
 import copy
 import time
+import sys
+import operator
 config = yaml.load(open('config.yml'), Loader=yaml.FullLoader)
+
+fitness_operator = operator.attrgetter("fitness_factor")
 
 class Task:
     length = 0
@@ -20,17 +24,15 @@ class Task:
 
 class Individual:
 
-    def __init__(self, processors = 0, tasks = [], assignments = []):
+    def __init__(self, processors = 0, tasks = [], initialize=True):
         self.tasks = []
         self.processors = processors
+        self.fitness_factor = 0
 
-        for taskLength in tasks:
-            self.tasks.append(Task(taskLength))
-        if len(assignments):
-            for i in range(len(assignments)):
-                self.tasks[i].processorID = assignments[i]
-        else:
+        self.tasks = [Task(taskLength) for taskLength in tasks]
+        if initialize:
             self.random()
+
     def getAssignments(self):
         return list(map(lambda t: t.processorID, self.tasks))
 
@@ -84,32 +86,42 @@ class Population:
     def __init__(self, config, processors = 0, tasks = []):
         self.config = config
         self.tasks = tasks
+        self.number_of_tasks = len(tasks)
         for i in range(self.config['population_size']):
             self.population.append(Individual(processors, tasks))
         # self.population[0].greedy()
 
+    def update_fitness(self):
+        for individual in self.population:
+            individual.fitness_factor = individual.fitness()
+
     def crossover(self, _a, _b):
-        cutoff_end = int(len(_a.tasks) * random.random())
+
+        cutoff_end = int(self.number_of_tasks * random.random())
         cutoff_start = int((cutoff_end-1) * random.random())
-        c = Individual(_a.processors, self.tasks, _a.getAssignments())
+        c = Individual(_a.processors, self.tasks, False)
+        for i in range(0, cutoff_start):
+            c.tasks[i].processorID = _a.tasks[i].processorID
         for i in range(cutoff_start, cutoff_end + 1):
             c.tasks[i].processorID = _b.tasks[i].processorID
+        for i in range(cutoff_end + 1, self.number_of_tasks):
+            c.tasks[i].processorID = _a.tasks[i].processorID
         return c
 
     def run(self):
         size = self.config['population_size']
         lastFitness = 0
         lastIndex = 0
-        pop_to_mutate = int(self.config['population_size']/10)
+        pop_to_mutate = int(self.config['population_size']/(1/self.config['part_of_pop_to_mutate']))
         half_pop = int(self.config['population_size']/2)
         start_mutate = half_pop-int(pop_to_mutate/2)
         end_mutate = start_mutate + pop_to_mutate
         for generation in range(self.config['iterations']):
             for i in range(start_mutate, end_mutate+1):
                 if random.random() <= self.config['mutation_chance']:
-                    self.population[i].mutate(3)
+                    self.population[i].mutate(self.config['mutation_rounds'])
             for i in range(self.config['population_size']):
-                for j in range(self.config['population_size']):
+                for j in range(0, i):
                     self.population.append(self.crossover(
                         self.population[i],
                         self.population[j]
@@ -120,7 +132,8 @@ class Population:
             #         random.choice(self.population),
             #     )
             #     self.population.append(child)
-            self.population.sort(key=lambda individual: individual.fitness())
+            self.update_fitness()
+            self.population.sort(key=fitness_operator)
             # print(generation)
             # print(list(map(lambda i: i.fitness(), self.population)))
             while len(self.population) > size:
@@ -135,8 +148,17 @@ class Population:
                 if generation - lastIndex > 100:
                     lastIndex = generation
                     for i in range(int(len(self.population)/2)):
+                        # self.population[-i].mutate(50)
                         self.population[-i].random()
         print(f'Generacja {generation}, fitness {self.population[0].fitness()}')
 
-population = Population(config, 25, [198, 157, 462, 779, 6, 98, 316, 450, 901, 372, 941, 94, 366, 781, 23, 16, 200, 686, 45, 311, 744, 784, 842, 168, 467, 214, 547, 74, 14, 499, 283, 981, 822, 621, 140, 895, 364, 185, 128, 794, 18, 646, 260, 419, 751, 532, 743, 923, 490, 478, 527, 543, 60, 915, 359, 90, 28, 44, 907, 18, 484, 718, 17, 820, 592, 11, 431, 657, 428, 373, 3, 58, 618, 7, 60, 980, 508, 813, 15, 568, 832, 625, 300, 2, 29, 6, 11, 8, 198, 701, 150, 500, 480, 478, 878, 380, 193, 367, 971, 276, 846, 590, 923, 961, 777, 241, 16, 91, 6, 419, 403, 456, 982, 41, 557])
+lines = []
+with open(sys.argv[1], "r") as file:
+    for line in file:
+        lines.append(int(line))
+
+cpus = lines[0]
+tasks = sorted(lines[2:], reverse=True)
+
+population = Population(config, cpus, tasks)
 population.run()
