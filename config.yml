@@ -4,3 +4,5 @@ mutation_rounds: 10 # liczba losowych tasków do zamiany podczas mutacji
 part_of_pop_to_mutate: 0.1 # odsetek populacji do zmutowania (osobniki ze środka klasyfikacji są mutowane)
 population_size: 25
 crossover_cutoff: 0.5 # odcięcie przy krzyżowaniu
+stale_population_part_randomize: 0.5 # procent populacji do przelosowania po stagnacji (100 iteracji bez z miany)
+stale_population_limit: 100 # limit iteracji bez zmiany wyniku, po których zostanie uruchomiony proces losowania

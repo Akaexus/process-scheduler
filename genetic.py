@@ -1,7 +1,7 @@
 import random
 import yaml
 import copy
-import time
+import datetime
 import sys
 import operator
 config = yaml.load(open('config.yml'), Loader=yaml.FullLoader)
@@ -143,11 +143,12 @@ class Population:
             if bestFitness != lastFitness:
                 lastFitness = bestFitness
                 lastIndex = generation
-                print(f'Generacja {generation}, fitness {self.population[0].fitness()}')
+                now = datetime.datetime.now()
+                print(f'${now} | Generacja {generation}, fitness {self.population[0].fitness()}')
             else:
-                if generation - lastIndex > 100:
+                if generation - lastIndex > self.config['stale_population_limit']:
                     lastIndex = generation
-                    for i in range(int(len(self.population)/2)):
+                    for i in range(int(len(self.population)/(1/self.config['stale_population_part_randomize']))):
                         # self.population[-i].mutate(50)
                         self.population[-i].random()
         print(f'Generacja {generation}, fitness {self.population[0].fitness()}')
